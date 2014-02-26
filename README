@@ -1,0 +1,54 @@
+# GUNSLINGER EDITOR
+# README
+###############################################################################
+
+########
+OVERVIEW
+########
+This tool is specifically designed for the game Gunslinger [https://github.com/
+El-Rico/Gunslinger], without Gunslinger this tool is useless, without this
+tool, well, Gunslinger wouldn't have any levels.
+
+#######
+BUILDING
+########
+Dependencies:
+ZED
+Xlib
+OpenGL
+
+Build procedure:
+Change directory to the Source/<platform> you require
+
+$ cd ~/GunslingerEd/Source/Linux
+
+Run make
+
+$ make
+
+By default, the debug version is built and stored in:
+Bin/<platform>/<arch>/<bitsize>
+
+There are three targets available; debug [the default], release, and profile.
+It is best to use the release build as that will be the most stable.
+
+$ make release
+
+You may run the program from the Bin/<platform>/<arch>/<bitsize> directory,
+such as:
+
+$ cd ~/GunslingerEd/Bin/Linux/x86/64/Gunslinger_<GCC version>
+
+The version of the compiler you used to create the executable will be present,
+unless you specify COMPILER_TAG=none when building
+
+$ make release COMPILER_TAG=none
+
+####################
+BUGS AND SUGGESTIONS
+####################
+Please report any bugs you encounter or editor enhancements you think would
+improve the designer's use of the tool to:
+
+https://github.com/El-Rico/GunslingerEd/issues
+
