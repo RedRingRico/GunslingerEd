@@ -13,36 +13,34 @@ tool, well, Gunslinger wouldn't have any levels.
 BUILDING
 ########
 Dependencies:
-ZED
-Xlib
 OpenGL
+Qt
 
 Build procedure:
-Change directory to the Source/<platform> you require
+Change into the Source directory
 
-$ cd ~/GunslingerEd/Source/Linux
+$ cd ~/GunslingerEd/Source
 
-Run make
+Run qmake with the configuration you need
+
+$ qmake CONFIG+=Release
+
+Where CONFIG can be either Release, Debug, or Profile.  Release is recommended
+as it will be the most stable build to run.  You may use the -o flag to specify
+an alternate Makefile name, such as:
+
+$ qmake CONFIG+=Release -o MyMakefile
+
+Using the generated Makefile, run:
 
 $ make
 
-By default, the debug version is built and stored in:
-Bin/<platform>/<arch>/<bitsize>
+If you named the Makefile anything other than Makefile, you will need to add
+the -f flag followed by the Makefile, for example:
 
-There are three targets available; debug [the default], release, and profile.
-It is best to use the release build as that will be the most stable.
+$ make -f MyMakefile
 
-$ make release
-
-You may run the program from the Bin/<platform>/<arch>/<bitsize> directory,
-such as:
-
-$ cd ~/GunslingerEd/Bin/Linux/x86/64/Gunslinger_<GCC version>
-
-The version of the compiler you used to create the executable will be present,
-unless you specify COMPILER_TAG=none when building
-
-$ make release COMPILER_TAG=none
+The executables are stored in the Bin directory
 
 ####################
 BUGS AND SUGGESTIONS

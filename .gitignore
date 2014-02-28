@@ -52,9 +52,13 @@ local.properties
 *.docstates
 
 # Git version header #
-GitVersion.hpp
+GitVersion*
 
 # LaTeX temporary files
 *.aux
 *.log
 *.toc
+
+# Temporary qmake Makefiles #
+Source/MakeDebug
+Source/MakeRelease
