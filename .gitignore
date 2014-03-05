@@ -62,3 +62,4 @@ GitVersion*
 # Temporary qmake Makefiles #
 Source/MakeDebug
 Source/MakeRelease
+Source/Makefile

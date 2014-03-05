@@ -6,6 +6,7 @@
 #include <QContextMenuEvent>
 #include <GitVersion.h>
 #include <cstring>
+#include <OpenGLWindow.h>
 
 MainWindow::MainWindow( )
 {
@@ -19,6 +20,13 @@ MainWindow::MainWindow( )
 
     pLayout->setMargin( 5 );
     pLayout->addWidget( pTopFiller );
+
+	m_pGLWindow = new OpenGLWindow( nullptr );
+	QWidget *pGLWindow = QWidget::createWindowContainer( m_pGLWindow );
+	pGLWindow->setMinimumSize( 200, 200 );
+	pGLWindow->setMaximumSize( 200, 200 );
+	pGLWindow->setFocusPolicy( Qt::TabFocus );
+	pLayout->addWidget( pGLWindow );
 
     pWidget->setLayout( pLayout );
 
@@ -45,6 +53,11 @@ MainWindow::MainWindow( )
 
 MainWindow::~MainWindow( )
 {
+	if( m_pGLWindow )
+	{
+		delete m_pGLWindow;
+		m_pGLWindow = nullptr;
+	}
 }
 
 void MainWindow::CreateActions( )
@@ -59,3 +72,4 @@ void MainWindow::CreateMenus( )
     m_pFileMenu = menuBar( )->addMenu( tr( "&File" ) );
     m_pFileMenu->addAction( m_pQuitAction );
 }
+

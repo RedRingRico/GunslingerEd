@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui opengl
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -26,12 +26,14 @@ TEMPLATE = app
 
 SOURCES +=\
 	Source/MainWindow.cpp \
-    Source/Main.cpp
+    Source/Main.cpp \
+	Source/OpenGLWindow.cpp
 
 INCLUDEPATH += ./Headers
 
 HEADERS  +=\
-	Headers/MainWindow.h
+	Headers/MainWindow.h \
+	Headers/OpenGLWindow.h
 
 versioninfo.target = Headers/GitVersion.h
 versioninfo.commands = @mkdir -p Headers;\

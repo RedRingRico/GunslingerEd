@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+class OpenGLWindow;
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -17,6 +19,8 @@ private:
 
     QMenu	*m_pFileMenu;
     QAction	*m_pQuitAction;
+	OpenGLWindow	*m_pGLWindow;
 };
 
 #endif // GUNSLINGERED_MAINWINDOW_H
+
