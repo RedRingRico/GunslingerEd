@@ -3,6 +3,7 @@
 #include <QStatusBar>
 #include <QAction>
 #include <QMenuBar>
+#include <QSplitter>
 #include <QContextMenuEvent>
 #include <GitVersion.h>
 #include <cstring>
@@ -13,20 +14,18 @@ MainWindow::MainWindow( )
     QWidget *pWidget = new QWidget( );
     setCentralWidget( pWidget );
 
-    QWidget *pTopFiller = new QWidget( );
-    pTopFiller->setSizePolicy( QSizePolicy::Expanding, QSizePolicy::Expanding );
-
     QVBoxLayout *pLayout = new QVBoxLayout( );
 
     pLayout->setMargin( 5 );
-    pLayout->addWidget( pTopFiller );
+
+	QSplitter *pSplit = new QSplitter( );
 
 	m_pGLWindow = new OpenGLWindow( nullptr );
 	QWidget *pGLWindow = QWidget::createWindowContainer( m_pGLWindow );
-	pGLWindow->setMinimumSize( 200, 200 );
-	pGLWindow->setMaximumSize( 200, 200 );
 	pGLWindow->setFocusPolicy( Qt::TabFocus );
-	pLayout->addWidget( pGLWindow );
+	pSplit->addWidget( pGLWindow );
+
+	pLayout->addWidget( pSplit );
 
     pWidget->setLayout( pLayout );
 

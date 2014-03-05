@@ -1,13 +1,18 @@
 #include <OpenGLWindow.h>
+#include <EditorViewport.h>
 #include <QtCore/QCoreApplication>
 #include <QtGui/QOpenGLContext>
 #include <QtGui/QOpenGLPaintDevice>
+#include <QtGui/QOpenGLFramebufferObject>
 #include <QtGui/QPainter>
 
 OpenGLWindow::OpenGLWindow( QWindow *p_pParent ) :
 	QWindow( p_pParent ),
 	m_UpdatePending( false ),
 	m_Animating( false ),
+	m_Initialised( false ),
+	m_ViewportsQueued( false ),
+	m_ViewportAdded( false ),
 	m_pGLContext( nullptr ),
 	m_pGLPaintDevice( nullptr )
 {
@@ -44,13 +49,35 @@ void OpenGLWindow::render( )
 {
 	if( !m_pGLPaintDevice )
 	{
-		m_pGLPaintDevice = new QOpenGLPaintDevice;
+		m_pGLPaintDevice = new QOpenGLPaintDevice( );
 	}
 
-	glClearColor( 1.0f, 0.0f, 0.0f, 1.0f );
+	if( !m_ViewportAdded )
+	{
+		EditorViewport TempView;
+		TempView.Create( 100, 100, ViewportOrthographic );
+		m_Viewport.push_back( &TempView );
+		m_ViewportAdded = true;
+	}
+
+	glClearColor( 0.13f, 0.0f, 0.13f, 1.0f );
 
 	glClear( GL_COLOR_BUFFER_BIT | 	GL_DEPTH_BUFFER_BIT |
 		GL_STENCIL_BUFFER_BIT );
+
+	std::vector< EditorViewport * >::const_iterator Viewport =
+		m_Viewport.begin( );
+	
+	QImage LastImage;
+
+	while( Viewport != m_Viewport.end( ) )
+	{
+		( *Viewport )->Activate( );
+		( *Viewport )->Render( );
+		( *Viewport )->Deactivate( );
+		( *Viewport )->GetImage( &LastImage );
+		++Viewport;
+	}
 
 	m_pGLPaintDevice->setSize( size( ) );
 
@@ -60,6 +87,12 @@ void OpenGLWindow::render( )
 
 void OpenGLWindow::initialize( )
 {
+	if( m_Initialised )
+	{
+		return;
+	}
+
+	m_Initialised = true;
 }
 
 void OpenGLWindow::setAnimating( bool p_Animating )

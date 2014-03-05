@@ -3,10 +3,13 @@
 
 #include <QtGui/QWindow>
 #include <QtGui/QOpenGLFunctions>
+#include <vector>
 
 class QPainter;
 class QOpenGLContext;
 class QOpenGLPaintDevice;
+class QOpenGLFramebufferObject;
+class EditorViewport;
 
 class OpenGLWindow : public QWindow
 {
@@ -34,11 +37,16 @@ protected:
 private:
 	bool m_UpdatePending;
 	bool m_Animating;
+	bool m_Initialised;
+	bool m_ViewportsQueued;
+	// Temporary for testing
+	bool m_ViewportAdded;
 
 	QOpenGLContext		*m_pGLContext;
 	QOpenGLPaintDevice	*m_pGLPaintDevice;
 	QOpenGLFunctions	*m_pGLFunctions;
 
+	std::vector< EditorViewport* >	m_Viewport;
 };
 
 #endif // __GUNSLINGERED_OPENGLWINDOW_H__
