@@ -7,10 +7,40 @@
 #include <QContextMenuEvent>
 #include <GitVersion.h>
 #include <cstring>
-#include <OpenGLWindow.h>
+#include <QtGui/QOpenGLContext>
+#include <QOffscreenSurface>
+#include <Utility.h>
+#include <EditorViewportManager.h>
+#include <EditorViewport.h>
+#include <QOpenGLFunctions>
 
 MainWindow::MainWindow( )
 {
+
+}
+
+MainWindow::~MainWindow( )
+{
+	SafeDelete( m_pOpenGLSurface );
+	SafeDelete( m_pSplitter );
+}
+
+int MainWindow::Initialise( )
+{
+	m_pOpenGLSurface = new QOffscreenSurface( );
+	m_pOpenGLSurface->create( );
+
+	m_pGLContext = new QOpenGLContext( );
+	m_pGLContext->create( );
+	m_pGLContext->makeCurrent( m_pOpenGLSurface );
+
+	m_pOpenGLFunctions = new QOpenGLFunctions( m_pGLContext );
+	m_pOpenGLFunctions->initializeOpenGLFunctions( );
+
+	if( m_pGLContext->isValid( ) == false )
+	{
+		return 1;
+	}
     QWidget *pWidget = new QWidget( );
     setCentralWidget( pWidget );
 
@@ -18,14 +48,11 @@ MainWindow::MainWindow( )
 
     pLayout->setMargin( 5 );
 
-	QSplitter *pSplit = new QSplitter( );
+	m_pSplitter = new QSplitter( );
 
-	m_pGLWindow = new OpenGLWindow( nullptr );
-	QWidget *pGLWindow = QWidget::createWindowContainer( m_pGLWindow );
-	pGLWindow->setFocusPolicy( Qt::TabFocus );
-	pSplit->addWidget( pGLWindow );
+	this->Initialise3DSplitter( );
 
-	pLayout->addWidget( pSplit );
+	pLayout->addWidget( m_pSplitter );
 
     pWidget->setLayout( pLayout );
 
@@ -48,15 +75,9 @@ MainWindow::MainWindow( )
     setWindowTitle( tr( Title ) );
     setMinimumSize( 640, 480 );
     resize( 1024, 768 );
-}
 
-MainWindow::~MainWindow( )
-{
-	if( m_pGLWindow )
-	{
-		delete m_pGLWindow;
-		m_pGLWindow = nullptr;
-	}
+
+	return 0;
 }
 
 void MainWindow::CreateActions( )
@@ -70,5 +91,19 @@ void MainWindow::CreateMenus( )
 {
     m_pFileMenu = menuBar( )->addMenu( tr( "&File" ) );
     m_pFileMenu->addAction( m_pQuitAction );
+}
+
+void MainWindow::Initialise3DSplitter( )
+{
+	m_pViewportManager = new EditorViewportManager( m_pGLContext );
+	EditorViewport *pTmpViewport = new EditorViewport( );
+
+	EditorViewport *pTmpViewport2 = new EditorViewport( );
+
+	m_pSplitter->addWidget( pTmpViewport );
+	m_pSplitter->addWidget( pTmpViewport2 );
+
+	pTmpViewport->Create( ViewportOrthographic );
+	pTmpViewport2->Create( ViewportOrthographic );
 }
 

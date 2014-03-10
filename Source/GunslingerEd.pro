@@ -27,15 +27,16 @@ TEMPLATE = app
 SOURCES +=\
 	Source/MainWindow.cpp \
     Source/Main.cpp \
-	Source/OpenGLWindow.cpp \
-	Source/EditorViewport.cpp
+	Source/EditorViewport.cpp \
+	Source/EditorViewportManager.cpp
 
 INCLUDEPATH += ./Headers
 
 HEADERS  +=\
 	Headers/MainWindow.h \
-	Headers/OpenGLWindow.h \
-	Headers/EditorViewport.h
+	Headers/EditorViewport.h \
+	Headers/Utility.h \
+	Headers/EditorViewportManager.h
 
 versioninfo.target = Headers/GitVersion.h
 versioninfo.commands = @mkdir -p Headers;\

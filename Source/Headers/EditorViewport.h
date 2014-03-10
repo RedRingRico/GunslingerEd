@@ -4,8 +4,10 @@
 #include <QColor>
 #include <QImage>
 #include <QSize>
+#include <QWidget>
 
 class QOpenGLFramebufferObject;
+class QPaintEvent;
 
 typedef enum __ViewportType
 {
@@ -13,14 +15,15 @@ typedef enum __ViewportType
 	ViewportPerspective
 }ViewportType;
 
-class EditorViewport
+class EditorViewport : public QWidget
 {
+	Q_OBJECT
+
 public:
-	EditorViewport( );
+	EditorViewport( QWidget *p_pParent = 0 );
 	~EditorViewport( );
 
-	int Create( const int p_Width, const int p_Height,
-		const ViewportType p_Type );
+	int Create( const ViewportType p_Type );
 	int Resize( const int p_Width, const int p_Height );
 
 	int SetType( const ViewportType p_Type );
@@ -41,6 +44,9 @@ private:
 	float						m_RedClear;
 	float						m_GreenClear;
 	float						m_BlueClear;
+
+protected:
+	void paintEvent( QPaintEvent *p_pPaintEvent );
 };
 
 #endif // __GUNSLINGERED_EDITORVIEWPORT_H__

@@ -1,7 +1,12 @@
 #include <EditorViewport.h>
 #include <QtGui/QOpenGLFramebufferObject>
+#include <QPaintEvent>
+#include <QPainter>
+#include <QRect>
+#include <QFont>
 
-EditorViewport::EditorViewport( )
+EditorViewport::EditorViewport( QWidget *p_pParent ) :
+	QWidget( p_pParent )
 {
 }
 
@@ -9,19 +14,13 @@ EditorViewport::~EditorViewport( )
 {
 }
 
-int EditorViewport::Create( const int p_Width, const int p_Height,
-	const ViewportType p_Type )
+int EditorViewport::Create( const ViewportType p_Type )
 {
-	if( ( p_Width <= 0 ) || ( p_Height <= 0 ) )
-	{
-		return 1;
-	}
+	m_pFramebuffer = new QOpenGLFramebufferObject( size( ), GL_TEXTURE_2D );
 
-	m_pFramebuffer = new QOpenGLFramebufferObject( p_Width, p_Height,
-		GL_TEXTURE_2D );
-	
-	m_Size.setWidth( p_Width );
-	m_Size.setHeight( p_Height );
+	printf( "Created with size: %dx%d\n", size( ).width( ),
+		size( ).height( ) );
+
 	m_Type = p_Type;
 
 	return 0;
@@ -85,6 +84,30 @@ void EditorViewport::Deactivate( )
 
 void EditorViewport::Render( )
 {
-	glClearColor( 0.0f, 0.0f, 0.0f, 0.0f );
+	glClearColor( m_RedClear, m_GreenClear, m_BlueClear, 1.0f );
+	glClear( GL_COLOR_BUFFER_BIT );
+	printf( "Rendered\n" );
+}
+
+void EditorViewport::paintEvent( QPaintEvent *p_pPaintEvent )
+{
+	this->Activate( );
+	this->SetClearColour( 0.12f, 0.12f, 0.2f );
+	this->Render( );
+	this->Deactivate( );
+	printf( "Painting to %d,%d\n", pos( ).x( ), pos( ).y( ) );
+	printf( "Framebuffer size: %dx%d\n", m_pFramebuffer->width( ),
+		m_pFramebuffer->height( ) );
+
+	QPainter Painter( this );
+	QPoint Zero( 0, 0 );
+	QRect Rectangle( Zero, size( ) );
+
+	Painter.drawImage( Rectangle, m_pFramebuffer->toImage( ) );
+	Painter.setPen( Qt::yellow );
+	QFont Qfont = Painter.font( );
+	Qfont.setPointSize( 20 );
+	Painter.setFont( Qfont );
+	Painter.drawText( QPoint( 0, pos( ).y( ) + 40 ), "Test" );
 }
 
