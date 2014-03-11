@@ -103,7 +103,7 @@ void MainWindow::Initialise3DSplitter( )
 	m_pSplitter->addWidget( pTmpViewport );
 	m_pSplitter->addWidget( pTmpViewport2 );
 
-	pTmpViewport->Create( ViewportOrthographic, m_pOpenGLFunctions );
+	pTmpViewport->Create( ViewportPerspective, m_pOpenGLFunctions );
 	pTmpViewport2->Create( ViewportOrthographic, m_pOpenGLFunctions );
 }
 

@@ -6,6 +6,7 @@
 #include <QSize>
 #include <QWidget>
 #include <QtGui/QOpenGLShaderProgram>
+#include <QtGui/QMatrix4x4>
 
 class QOpenGLFramebufferObject;
 class QPaintEvent;
@@ -71,7 +72,13 @@ private:
 	float					m_PanY;
 	float					m_StoredPanX;
 	float					m_StoredPanY;
+	float					m_Scale;
 	QPoint					m_MousePosition;
+
+	QMatrix4x4				m_ProjectionMatrix;
+	QMatrix4x4				m_ViewMatrix;
+
+	void	RecreateProjectionMatrix( );
 
 protected:
 	void paintEvent( QPaintEvent *p_pPaintEvent );

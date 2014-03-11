@@ -2,6 +2,7 @@
 #include <QtGui/QOpenGLFramebufferObject>
 #include <QPaintEvent>
 #include <QPainter>
+#include <QPainterPath>
 #include <QRect>
 #include <QFont>
 #include <QOpenGLShaderProgram>
@@ -35,7 +36,7 @@ EditorViewport::EditorViewport( QWidget *p_pParent ) :
 	QWidget( p_pParent ),
 	m_pFramebuffer( nullptr ),
 	m_Type( ViewportOrthographic ),
-	m_Side( ViewportFreeMoving ),
+	m_Side( ViewportXY ),
 	m_RedClear( 0.13f ),
 	m_GreenClear( 0.0f ),
 	m_BlueClear( 0.13f ),
@@ -44,7 +45,8 @@ EditorViewport::EditorViewport( QWidget *p_pParent ) :
 	m_PanX( 0.0f ),
 	m_PanY( 0.0f ),
 	m_StoredPanX( 0.0f ),
-	m_StoredPanY( 0.0f )
+	m_StoredPanY( 0.0f ),
+	m_Scale( 1.0f )
 {
 }
 
@@ -57,9 +59,6 @@ int EditorViewport::Create( const ViewportType p_Type,
 {
 	m_pGLFunctions = p_pGLFunctions;
 	m_pFramebuffer = new QOpenGLFramebufferObject( size( ), GL_TEXTURE_2D );
-
-	printf( "Created with size: %dx%d\n", size( ).width( ),
-		size( ).height( ) );
 
 	m_Type = p_Type;
 
@@ -142,13 +141,9 @@ void EditorViewport::Render( )
 
 	m_pProgram->bind( );
 
-	QMatrix4x4 Matrix;
-	Matrix.perspective( 60,
-		static_cast< float >( size( ).width( ) ) /
-			static_cast< float >( size( ).height( ) ), 0.1f, 100.0f );
-	Matrix.translate( m_PanX, m_PanY, m_Zoom );
+	RecreateProjectionMatrix( );
 
-	m_pProgram->setUniformValue( m_MatrixUniform, Matrix );
+	m_pProgram->setUniformValue( m_MatrixUniform, m_ProjectionMatrix );
 
 	GLfloat Vertices[ ] =
 	{
@@ -178,8 +173,43 @@ void EditorViewport::Render( )
 	m_pGLFunctions->glDisableVertexAttribArray( 0 );
 
 	m_pProgram->release( );
+}
 
-	printf( "Rendered\n" );
+void EditorViewport::RecreateProjectionMatrix( )
+{
+	m_ProjectionMatrix.setToIdentity( );
+	if( m_Type == ViewportPerspective )
+	{
+		m_ProjectionMatrix.perspective( 60,
+			static_cast< float >( size( ).width( ) ) /
+				static_cast< float >( size( ).height( ) ), 0.1f, 100.0f );
+
+		m_ProjectionMatrix.translate( m_PanX, m_PanY, m_Zoom );
+	}
+	else if( m_Type == ViewportOrthographic )
+	{
+		if( size( ).width( ) > size( ).height( ) )
+		{
+			float Factor = static_cast< float >( size( ).width( ) ) /
+				static_cast< float >( size( ).height( ) );
+			m_ProjectionMatrix.ortho( -Factor, Factor, -1.0f, 1.0f,
+				0.01f, 10000.0f );
+		}
+		else if( size( ).width( ) == size( ).height( ) )
+		{
+			m_ProjectionMatrix.ortho( -1.0f, 1.0f, -1.0f, 1.0f,
+				0.01f, 10000.0f );
+		}
+		else
+		{
+			float Factor = static_cast< float >( size( ).height( ) ) /
+				static_cast< float >( size( ).width( ) );
+			m_ProjectionMatrix.ortho( -1.0f, 1.0f, -Factor, Factor,
+				0.001f, 10000.0f );
+		}
+		m_ProjectionMatrix.scale( m_Scale );
+		m_ProjectionMatrix.translate( m_PanX, m_PanY, -1.0f );
+	}
 }
 
 void EditorViewport::paintEvent( QPaintEvent *p_pPaintEvent )
@@ -188,20 +218,18 @@ void EditorViewport::paintEvent( QPaintEvent *p_pPaintEvent )
 	this->SetClearColour( 0.12f, 0.12f, 0.2f );
 	this->Render( );
 	this->Deactivate( );
-	printf( "Painting to %d,%d\n", pos( ).x( ), pos( ).y( ) );
-	printf( "Framebuffer size: %dx%d\n", m_pFramebuffer->width( ),
-		m_pFramebuffer->height( ) );
 
 	QPainter Painter( this );
 	QPoint Zero( 0, 0 );
 	QRect Rectangle( Zero, size( ) );
 
 	Painter.drawImage( Rectangle, m_pFramebuffer->toImage( ) );
-	Painter.setPen( Qt::yellow );
+
 	QFont Qfont = Painter.font( );
 	QFontMetrics FontMetrics( Qfont );
 	Qfont.setPointSize( 8 );
 	Painter.setFont( Qfont );
+	Painter.setPen( Qt::white );
 	Painter.drawText( QPoint( 0, FontMetrics.lineSpacing( ) ),
 		GetNameFromViewport( m_Type, m_Side ) );
 }
@@ -211,16 +239,27 @@ void EditorViewport::resizeEvent( QResizeEvent *p_pResizeEvent )
 	m_pFramebuffer->release( );
 	SafeDelete( m_pFramebuffer );
 	m_pFramebuffer = new QOpenGLFramebufferObject( size( ), GL_TEXTURE_2D );
-
-	printf( "New framebuffer size: %dx%d\n", size( ).width( ),
-		size( ).height( ) );
 }
 
 void EditorViewport::wheelEvent( QWheelEvent *p_pWheelEvent )
 {
 	m_Zoom += static_cast< float >( p_pWheelEvent->angleDelta( ).y( ) ) *
 		0.01f; 
-	printf( "Zoom: %f\n", m_Zoom );
+
+	if( p_pWheelEvent->angleDelta( ).y( ) > 0 )
+	{
+		m_Scale += 0.01f;
+	}
+	else
+	{
+		m_Scale -= 0.01f;
+	}
+
+	if( m_Scale < 0.01f )
+	{
+		m_Scale = 0.01f;
+	}
+
 	update( );
 }
 
@@ -255,13 +294,11 @@ void EditorViewport::mouseMoveEvent( QMouseEvent *p_pMouseEvent )
 
 		NewPosition -= m_MousePosition;
 
-		printf( "Delta: %d %d\n", NewPosition.x( ), NewPosition.y( ) );
+		float PanXDelta = static_cast< float >( NewPosition.x( ) ) * 0.01f;
+		float PanYDelta = static_cast< float >( NewPosition.y( ) ) * -0.01f ;
 
-		float m_PanXDelta = static_cast< float >( NewPosition.x( ) ) * 0.01f;
-		float m_PanYDelta = static_cast< float >( NewPosition.y( ) ) * -0.01f ;
-
-		m_PanX = m_PanXDelta + m_StoredPanX;
-		m_PanY = m_PanYDelta + m_StoredPanY;
+		m_PanX = PanXDelta + m_StoredPanX;
+		m_PanY = PanYDelta + m_StoredPanY;
 	}
 
 	update( );
