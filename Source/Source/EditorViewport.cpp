@@ -42,7 +42,9 @@ EditorViewport::EditorViewport( QWidget *p_pParent ) :
 	m_Zoom( -2.0f ),
 	m_Panning( false ),
 	m_PanX( 0.0f ),
-	m_PanY( 0.0f )
+	m_PanY( 0.0f ),
+	m_StoredPanX( 0.0f ),
+	m_StoredPanY( 0.0f )
 {
 }
 
@@ -240,6 +242,8 @@ void EditorViewport::mousePressEvent( QMouseEvent *p_pMouseEvent )
 void EditorViewport::mouseReleaseEvent( QMouseEvent *p_pMouseEvent )
 {
 	m_Panning = false;
+	m_StoredPanX = m_PanX;
+	m_StoredPanY = m_PanY;
 	update( );
 }
 
@@ -253,8 +257,11 @@ void EditorViewport::mouseMoveEvent( QMouseEvent *p_pMouseEvent )
 
 		printf( "Delta: %d %d\n", NewPosition.x( ), NewPosition.y( ) );
 
-		m_PanX = static_cast< float >( NewPosition.x( ) ) * -0.01f;
-		m_PanY = static_cast< float >( NewPosition.y( ) ) * -0.01f ;
+		float m_PanXDelta = static_cast< float >( NewPosition.x( ) ) * 0.01f;
+		float m_PanYDelta = static_cast< float >( NewPosition.y( ) ) * -0.01f ;
+
+		m_PanX = m_PanXDelta + m_StoredPanX;
+		m_PanY = m_PanYDelta + m_StoredPanY;
 	}
 
 	update( );

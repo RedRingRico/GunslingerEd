@@ -69,6 +69,8 @@ private:
 	bool					m_Panning;
 	float					m_PanX;
 	float					m_PanY;
+	float					m_StoredPanX;
+	float					m_StoredPanY;
 	QPoint					m_MousePosition;
 
 protected:
