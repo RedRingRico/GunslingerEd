@@ -54,6 +54,7 @@ private:
 	QOpenGLFramebufferObject	*m_pFramebuffer;
 	QSize						m_Size;
 	ViewportType				m_Type;
+	ViewportSide				m_Side;
 	float						m_RedClear;
 	float						m_GreenClear;
 	float						m_BlueClear;
@@ -68,6 +69,9 @@ protected:
 	void paintEvent( QPaintEvent *p_pPaintEvent );
 	void resizeEvent( QResizeEvent *p_pResizeEvent );
 };
+
+char *GetNameFromViewport( const ViewportType p_Type,
+	const ViewportSide p_Side );
 
 #endif // __GUNSLINGERED_EDITORVIEWPORT_H__
 

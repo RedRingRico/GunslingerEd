@@ -32,7 +32,13 @@ static const char *pFragmentShaderSource =
 };
 
 EditorViewport::EditorViewport( QWidget *p_pParent ) :
-	QWidget( p_pParent )
+	QWidget( p_pParent ),
+	m_pFramebuffer( nullptr ),
+	m_Type( ViewportOrthographic ),
+	m_Side( ViewportFreeMoving ),
+	m_RedClear( 0.13f ),
+	m_GreenClear( 0.0f ),
+	m_BlueClear( 0.13f )
 {
 }
 
@@ -185,9 +191,11 @@ void EditorViewport::paintEvent( QPaintEvent *p_pPaintEvent )
 	Painter.drawImage( Rectangle, m_pFramebuffer->toImage( ) );
 	Painter.setPen( Qt::yellow );
 	QFont Qfont = Painter.font( );
-	Qfont.setPointSize( 20 );
+	QFontMetrics FontMetrics( Qfont );
+	Qfont.setPointSize( 8 );
 	Painter.setFont( Qfont );
-	Painter.drawText( QPoint( 0, pos( ).y( ) + 40 ), "Test" );
+	Painter.drawText( QPoint( 0, FontMetrics.lineSpacing( ) ),
+		GetNameFromViewport( m_Type, m_Side ) );
 }
 
 void EditorViewport::resizeEvent( QResizeEvent *p_pResizeEvent )
@@ -198,5 +206,60 @@ void EditorViewport::resizeEvent( QResizeEvent *p_pResizeEvent )
 
 	printf( "New framebuffer size: %dx%d\n", size( ).width( ),
 		size( ).height( ) );
+}
+
+char *GetNameFromViewport( const ViewportType p_Type,
+	const ViewportSide p_Side )
+{
+	char Message[ 1024 ];
+	memset( Message, '\0', sizeof( Message ) );
+
+	switch( p_Type )
+	{
+		case ViewportOrthographic:
+		{
+			strcat( Message, "Orthographic" );
+			break;
+		}
+		case ViewportPerspective:
+		{
+			strcat( Message, "Perspective" );
+			break;
+		}
+		default:
+		{
+			strcat( Message, "Unknown Projection" );
+		}
+	}
+
+	switch( p_Side )
+	{
+		case ViewportXZ:
+		{
+			strcat( Message, " [XZ]" );
+			break;
+		}
+		case ViewportXY:
+		{
+			strcat( Message, " [XY]" );
+			break;
+		}
+		case ViewportYZ:
+		{
+			strcat( Message, " [YZ]" );
+			break;
+		}
+		case ViewportFreeMoving:
+		{
+			strcat( Message, " [Free]" );
+			break;
+		}
+		default:
+		{
+			strcat( Message, " [Unknown View]" );
+		}
+	}
+
+	return Message;
 }
 
