@@ -38,7 +38,11 @@ EditorViewport::EditorViewport( QWidget *p_pParent ) :
 	m_Side( ViewportFreeMoving ),
 	m_RedClear( 0.13f ),
 	m_GreenClear( 0.0f ),
-	m_BlueClear( 0.13f )
+	m_BlueClear( 0.13f ),
+	m_Zoom( -2.0f ),
+	m_Panning( false ),
+	m_PanX( 0.0f ),
+	m_PanY( 0.0f )
 {
 }
 
@@ -66,6 +70,8 @@ int EditorViewport::Create( const ViewportType p_Type,
 	m_PositionAttribute = m_pProgram->attributeLocation( "a_Position" );
 	m_ColourAttribute = m_pProgram->attributeLocation( "a_Colour" );
 	m_MatrixUniform = m_pProgram->uniformLocation( "u_Matrix" );
+
+	setMouseTracking( true );
 
 	return 0;
 }
@@ -138,7 +144,7 @@ void EditorViewport::Render( )
 	Matrix.perspective( 60,
 		static_cast< float >( size( ).width( ) ) /
 			static_cast< float >( size( ).height( ) ), 0.1f, 100.0f );
-	Matrix.translate( 0, 0, -2 );
+	Matrix.translate( m_PanX, m_PanY, m_Zoom );
 
 	m_pProgram->setUniformValue( m_MatrixUniform, Matrix );
 
@@ -206,6 +212,52 @@ void EditorViewport::resizeEvent( QResizeEvent *p_pResizeEvent )
 
 	printf( "New framebuffer size: %dx%d\n", size( ).width( ),
 		size( ).height( ) );
+}
+
+void EditorViewport::wheelEvent( QWheelEvent *p_pWheelEvent )
+{
+	m_Zoom += static_cast< float >( p_pWheelEvent->angleDelta( ).y( ) ) *
+		0.01f; 
+	printf( "Zoom: %f\n", m_Zoom );
+	update( );
+}
+
+void EditorViewport::mousePressEvent( QMouseEvent *p_pMouseEvent )
+{
+	if( m_Panning )
+	{
+
+	}
+	else
+	{
+		m_MousePosition = p_pMouseEvent->pos( );
+		m_Panning = true;
+	}
+
+	update( );
+}
+
+void EditorViewport::mouseReleaseEvent( QMouseEvent *p_pMouseEvent )
+{
+	m_Panning = false;
+	update( );
+}
+
+void EditorViewport::mouseMoveEvent( QMouseEvent *p_pMouseEvent )
+{
+	if( m_Panning )
+	{
+		QPoint NewPosition = p_pMouseEvent->pos( );
+
+		NewPosition -= m_MousePosition;
+
+		printf( "Delta: %d %d\n", NewPosition.x( ), NewPosition.y( ) );
+
+		m_PanX = static_cast< float >( NewPosition.x( ) ) * -0.01f;
+		m_PanY = static_cast< float >( NewPosition.y( ) ) * -0.01f ;
+	}
+
+	update( );
 }
 
 char *GetNameFromViewport( const ViewportType p_Type,

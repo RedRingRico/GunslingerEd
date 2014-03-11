@@ -64,10 +64,20 @@ private:
 	GLuint					m_MatrixUniform;
 	QOpenGLShaderProgram	*m_pProgram;
 	QOpenGLFunctions		*m_pGLFunctions;
+	float					m_Zoom;
+
+	bool					m_Panning;
+	float					m_PanX;
+	float					m_PanY;
+	QPoint					m_MousePosition;
 
 protected:
 	void paintEvent( QPaintEvent *p_pPaintEvent );
 	void resizeEvent( QResizeEvent *p_pResizeEvent );
+	virtual void wheelEvent( QWheelEvent *p_pWheelEvent );
+	virtual void mousePressEvent( QMouseEvent *p_pMouseEvent );
+	virtual void mouseReleaseEvent( QMouseEvent *p_pMouseEvent );
+	virtual void mouseMoveEvent( QMouseEvent *p_pMouseEvent );
 };
 
 char *GetNameFromViewport( const ViewportType p_Type,
