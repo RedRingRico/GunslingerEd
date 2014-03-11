@@ -5,15 +5,27 @@
 #include <QImage>
 #include <QSize>
 #include <QWidget>
+#include <QtGui/QOpenGLShaderProgram>
 
 class QOpenGLFramebufferObject;
 class QPaintEvent;
+class QResizeEvent;
+class QOpenGLShaderProgram;
+class QOpenGLFunctions;
 
 typedef enum __ViewportType
 {
 	ViewportOrthographic,
 	ViewportPerspective
 }ViewportType;
+
+typedef enum __ViewportSide
+{
+	ViewportXZ,
+	ViewportXY,
+	ViewportYZ,
+	ViewportFreeMoving
+}ViewportSide;
 
 class EditorViewport : public QWidget
 {
@@ -23,7 +35,8 @@ public:
 	EditorViewport( QWidget *p_pParent = 0 );
 	~EditorViewport( );
 
-	int Create( const ViewportType p_Type );
+	int Create( const ViewportType p_Type,
+		QOpenGLFunctions * const &p_GLFunctions );
 	int Resize( const int p_Width, const int p_Height );
 
 	int SetType( const ViewportType p_Type );
@@ -45,8 +58,15 @@ private:
 	float						m_GreenClear;
 	float						m_BlueClear;
 
+	GLuint					m_PositionAttribute;
+	GLuint					m_ColourAttribute;
+	GLuint					m_MatrixUniform;
+	QOpenGLShaderProgram	*m_pProgram;
+	QOpenGLFunctions		*m_pGLFunctions;
+
 protected:
 	void paintEvent( QPaintEvent *p_pPaintEvent );
+	void resizeEvent( QResizeEvent *p_pResizeEvent );
 };
 
 #endif // __GUNSLINGERED_EDITORVIEWPORT_H__

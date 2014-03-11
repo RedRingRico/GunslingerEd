@@ -13,12 +13,12 @@ EditorViewportManager::~EditorViewportManager( )
 
 int EditorViewportManager::Create( const ViewportType p_Type )
 {
-	EditorViewport *pViewport = new EditorViewport( );
+/*	EditorViewport *pViewport = new EditorViewport( );
 
 	if( pViewport->Create( p_Type ) != 0 )
 	{
 		return 1;
-	}
+	}*/
 
 	return 0;
 }

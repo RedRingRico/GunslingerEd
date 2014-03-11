@@ -4,6 +4,32 @@
 #include <QPainter>
 #include <QRect>
 #include <QFont>
+#include <QOpenGLShaderProgram>
+#include <QtGui/QMatrix4x4>
+#include <QOpenGLFunctions>
+#include <Utility.h>
+
+static const char *pVertexShaderSource =
+{
+	"attribute highp vec4 a_Position;\n"
+	"attribute lowp vec4 a_Colour;\n"
+	"varying lowp vec4 f_Colour;\n"
+	"uniform highp mat4 u_Matrix;\n"
+	"void main( )\n"
+	"{\n"
+	"	f_Colour = a_Colour;\n"
+	"	gl_Position = u_Matrix * a_Position;\n"
+	"}\n"
+};
+
+static const char *pFragmentShaderSource =
+{
+	"varying lowp vec4 f_Colour;\n"
+	"void main( )\n"
+	"{\n"
+	"	gl_FragColor = f_Colour;\n"
+	"}\n"
+};
 
 EditorViewport::EditorViewport( QWidget *p_pParent ) :
 	QWidget( p_pParent )
@@ -14,14 +40,26 @@ EditorViewport::~EditorViewport( )
 {
 }
 
-int EditorViewport::Create( const ViewportType p_Type )
+int EditorViewport::Create( const ViewportType p_Type,
+	QOpenGLFunctions * const &p_pGLFunctions )
 {
+	m_pGLFunctions = p_pGLFunctions;
 	m_pFramebuffer = new QOpenGLFramebufferObject( size( ), GL_TEXTURE_2D );
 
 	printf( "Created with size: %dx%d\n", size( ).width( ),
 		size( ).height( ) );
 
 	m_Type = p_Type;
+
+	m_pProgram = new QOpenGLShaderProgram( this );
+	m_pProgram->addShaderFromSourceCode( QOpenGLShader::Vertex,
+		pVertexShaderSource );
+	m_pProgram->addShaderFromSourceCode( QOpenGLShader::Fragment,
+		pFragmentShaderSource );
+	m_pProgram->link( );
+	m_PositionAttribute = m_pProgram->attributeLocation( "a_Position" );
+	m_ColourAttribute = m_pProgram->attributeLocation( "a_Colour" );
+	m_MatrixUniform = m_pProgram->uniformLocation( "u_Matrix" );
 
 	return 0;
 }
@@ -84,8 +122,49 @@ void EditorViewport::Deactivate( )
 
 void EditorViewport::Render( )
 {
+	glViewport( 0, 0, width( ), height( ) );
 	glClearColor( m_RedClear, m_GreenClear, m_BlueClear, 1.0f );
 	glClear( GL_COLOR_BUFFER_BIT );
+
+	m_pProgram->bind( );
+
+	QMatrix4x4 Matrix;
+	Matrix.perspective( 60,
+		static_cast< float >( size( ).width( ) ) /
+			static_cast< float >( size( ).height( ) ), 0.1f, 100.0f );
+	Matrix.translate( 0, 0, -2 );
+
+	m_pProgram->setUniformValue( m_MatrixUniform, Matrix );
+
+	GLfloat Vertices[ ] =
+	{
+		0.0f, 0.707f,
+		-0.5f, -0.5f,
+		0.5f, -0.5f
+	};
+
+	GLfloat Colours[ ] =
+	{
+		1.0f, 0.0f, 0.0f,
+		0.0f, 1.0f, 0.0f,
+		0.0f, 0.0f, 1.0f
+	};
+
+	m_pGLFunctions->glVertexAttribPointer( m_PositionAttribute, 2, GL_FLOAT,
+		GL_FALSE, 0, Vertices );
+	m_pGLFunctions->glVertexAttribPointer( m_ColourAttribute, 3, GL_FLOAT,
+		GL_FALSE, 0, Colours );
+	
+	m_pGLFunctions->glEnableVertexAttribArray( 0 );
+	m_pGLFunctions->glEnableVertexAttribArray( 1 );
+
+	glDrawArrays( GL_TRIANGLES, 0, 3 );
+
+	m_pGLFunctions->glDisableVertexAttribArray( 1 );
+	m_pGLFunctions->glDisableVertexAttribArray( 0 );
+
+	m_pProgram->release( );
+
 	printf( "Rendered\n" );
 }
 
@@ -109,5 +188,15 @@ void EditorViewport::paintEvent( QPaintEvent *p_pPaintEvent )
 	Qfont.setPointSize( 20 );
 	Painter.setFont( Qfont );
 	Painter.drawText( QPoint( 0, pos( ).y( ) + 40 ), "Test" );
+}
+
+void EditorViewport::resizeEvent( QResizeEvent *p_pResizeEvent )
+{
+	m_pFramebuffer->release( );
+	SafeDelete( m_pFramebuffer );
+	m_pFramebuffer = new QOpenGLFramebufferObject( size( ), GL_TEXTURE_2D );
+
+	printf( "New framebuffer size: %dx%d\n", size( ).width( ),
+		size( ).height( ) );
 }
 
